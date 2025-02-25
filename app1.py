@@ -16,6 +16,7 @@ faceapp.prepare(ctx_id=0, det_thresh=0.5, det_size=(640, 640))
 recognizer = pickle.loads(open("./face_db/embeddings.dat", "rb").read())
 le = pickle.loads(open("./face_db/le.dat", "rb").read())
 
+
 # Function to calculate similarity between two embeddings
 def get_similarity(emb1, emb2):
     dot = np.sum(np.multiply(emb1, emb2), axis=0)
@@ -25,12 +26,13 @@ def get_similarity(emb1, emb2):
     pcnt = 0
     thr = 0.35
     if cosdist <= thr:
-        pcnt = (0.2/thr) * cosdist
+        pcnt = (0.2 / thr) * cosdist
     elif cosdist > thr and cosdist <= 0.5:
         pcnt = 5.33333 * cosdist - 1.66667
     pcnt = (1.0 - pcnt) * 100
     pcnt = min(100, pcnt)
     return pcnt
+
 
 # Function to match a face embedding with the database
 def match(vector):
@@ -48,6 +50,7 @@ def match(vector):
         identity = "NONE"
     return max_sim, identity
 
+
 # Function to identify faces in an image
 def identify_face(image):
     faces = faceapp.get(image)
@@ -56,20 +59,21 @@ def identify_face(image):
         max_box = None
         for face in faces:
             box = face.bbox.astype(np.int32)
-            area =  (box[3] - box[1]) * (box[2]-box[0])
-            
+            area = (box[3] - box[1]) * (box[2] - box[0])
+
             max_area = 0
             try:
-                max_area = (max_box[3]-max_box[1])*(max_box[2]-max_box[0])
+                max_area = (max_box[3] - max_box[1]) * (max_box[2] - max_box[0])
             except:
                 max_area = 0
             if area > max_area:
-                 max_box = box
-                 largest_face = face
+                max_box = box
+                largest_face = face
         similarity, name = match(largest_face.embedding)
         return similarity, name
     else:
         return 0, "NONE"
+
 
 # Function to test liveness detection using a camera
 def test_camera(model_dir):
@@ -90,13 +94,15 @@ def test_camera(model_dir):
     if not cap.isOpened():
         print("Error: Could not open camera.")
         return
-
+    frame_num = 0
     while True:
         try:
+            frame_num += 1
             ret, frame = cap.read()
             if not ret:
                 print("Error: Failed to capture frame.")
                 break
+            if frame_num % 5 != 0: continue
 
             # Resize frame for faster processing (optional)
             frame = cv2.resize(frame, (640, 480))
@@ -124,7 +130,7 @@ def test_camera(model_dir):
                 if scale is None:
                     param["crop"] = False
                 img = image_cropper.crop(**param)
-                
+
                 predict_val = model_test[model_name].eval(img)
                 prediction += predict_val
                 num_models += 1
@@ -134,9 +140,11 @@ def test_camera(model_dir):
             total_count = total_count + 1
             if prediction[0][1] > 0.5:
                 real_count = real_count + 1
-                print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) +") ----- Real")
+                print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(
+                    prediction[0][1]) + " : " + name + "(" + str(similarity) + ") ----- Real")
             else:
-                 print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) + ") ----- Fake")
+                print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(
+                    prediction[0][1]) + " : " + name + "(" + str(similarity) + ") ----- Fake")
             if lowest_real_val > prediction[0][1]:
                 lowest_real_val = prediction[0][1]
 
@@ -147,8 +155,10 @@ def test_camera(model_dir):
 
     # Release resources
     cap.release()
-    print('total : ' + str(total_count) + " --- As real :" + str(real_count) + " --- rate : " + str(float(real_count) / total_count))
+    print('total : ' + str(total_count) + " --- As real :" + str(real_count) + " --- rate : " + str(
+        float(real_count) / total_count))
     print("LOWEST value:" + str(lowest_real_val))
+
 
 if __name__ == "__main__":
     test_camera("./models/liveness")
