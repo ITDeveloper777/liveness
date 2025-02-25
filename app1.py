@@ -133,9 +133,9 @@ def test_camera(model_dir):
         total_count = total_count + 1
         if prediction[0][1] > 0.5:
             real_count = real_count + 1
-            print(fpath + "------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) +") ----- Real")
+            print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) +") ----- Real")
         else:
-             print(fpath + "------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) + ") ----- Fake")
+             print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) + ") ----- Fake")
         if lowest_real_val > prediction[0][1]:
             lowest_real_val = prediction[0][1]
     print('total : ' + str(total_count) + " --- As real :" + str(real_count) + " --- rate : " + str(float(real_count) / total_count))
