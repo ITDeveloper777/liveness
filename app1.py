@@ -95,6 +95,9 @@ def test_camera(model_dir):
 
         # Resize frame for faster processing (optional)
         frame = cv2.resize(frame, (640, 480))
+        start = time.time()
+        test_speed = 0
+        num_models = 0
 
         # Identify face and calculate similarity
         similarity, name = identify_face(frame)
