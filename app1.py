@@ -80,6 +80,10 @@ def test_camera(model_dir):
 
     # Initialize image cropper
     image_cropper = CropImage()
+    total_count = 0
+    real_count = 0
+    lowest_real_val = 1
+    index = 0
 
     # Initialize camera
     cap = cv2.VideoCapture("rtsp://admin:toqjys-hywwa6-nitFem@192.168.0.12:554")  # Use 0 for the default camera
