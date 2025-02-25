@@ -121,7 +121,7 @@ def test_camera(model_dir):
             prediction += predict_val
             num_models += 1
 
-         test_speed = time.time() - start
+        test_speed = time.time() - start
         prediction = prediction / num_models
         total_count = total_count + 1
         if prediction[0][1] > 0.5:
