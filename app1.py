@@ -92,58 +92,63 @@ def test_camera(model_dir):
         return
 
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Error: Failed to capture frame.")
-            break
+        try:
+            ret, frame = cap.read()
+            if not ret:
+                print("Error: Failed to capture frame.")
+                break
 
-        # Resize frame for faster processing (optional)
-        frame = cv2.resize(frame, (640, 480))
-        start = time.time()
-        test_speed = 0
-        num_models = 0
+            # Resize frame for faster processing (optional)
+            frame = cv2.resize(frame, (640, 480))
+            start = time.time()
+            test_speed = 0
+            num_models = 0
 
-        # Identify face and calculate similarity
-        similarity, name = identify_face(frame)
+            # Identify face and calculate similarity
+            similarity, name = identify_face(frame)
 
-        # Perform liveness detection
-        prediction = np.zeros((1, 3))
-        num_models = 0
-        for model_name in os.listdir(model_dir):
-            image_bbox = model_test[model_name].get_bbox(frame)
-            h_input, w_input, _, scale = parse_model_name(model_name)
-            param = {
-                "org_img": frame,
-                "bbox": image_bbox,
-                "scale": scale,
-                "out_w": w_input,
-                "out_h": h_input,
-                "crop": True,
-            }
-            if scale is None:
-                param["crop"] = False
-            img = image_cropper.crop(**param)
-            
-            predict_val = model_test[model_name].eval(img)
-            prediction += predict_val
-            num_models += 1
+            # Perform liveness detection
+            prediction = np.zeros((1, 3))
+            num_models = 0
+            for model_name in os.listdir(model_dir):
+                image_bbox = model_test[model_name].get_bbox(frame)
+                h_input, w_input, _, scale = parse_model_name(model_name)
+                param = {
+                    "org_img": frame,
+                    "bbox": image_bbox,
+                    "scale": scale,
+                    "out_w": w_input,
+                    "out_h": h_input,
+                    "crop": True,
+                }
+                if scale is None:
+                    param["crop"] = False
+                img = image_cropper.crop(**param)
+                
+                predict_val = model_test[model_name].eval(img)
+                prediction += predict_val
+                num_models += 1
 
-        test_speed = time.time() - start
-        prediction = prediction / num_models
-        total_count = total_count + 1
-        if prediction[0][1] > 0.5:
-            real_count = real_count + 1
-            print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) +") ----- Real")
-        else:
-             print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) + ") ----- Fake")
-        if lowest_real_val > prediction[0][1]:
-            lowest_real_val = prediction[0][1]
-    
+            test_speed = time.time() - start
+            prediction = prediction / num_models
+            total_count = total_count + 1
+            if prediction[0][1] > 0.5:
+                real_count = real_count + 1
+                print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) +") ----- Real")
+            else:
+                 print("------ {:.2f}s".format(test_speed) + " --- {:.3f}".format(prediction[0][1]) + " : " + name + "(" + str(similarity) + ") ----- Fake")
+            if lowest_real_val > prediction[0][1]:
+                lowest_real_val = prediction[0][1]
 
-     
+        except Exception as e:
+            # Handle any exceptions that occur during processing
+            print(f"Error during processing: {e}")
+            continue  # Continue to the next frame
+
     # Release resources
     cap.release()
-    
+    print('total : ' + str(total_count) + " --- As real :" + str(real_count) + " --- rate : " + str(float(real_count) / total_count))
+    print("LOWEST value:" + str(lowest_real_val))
 
 if __name__ == "__main__":
     test_camera("./models/liveness")
